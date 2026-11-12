@@ -114,6 +114,34 @@
   .brand-dots span:nth-child(2) { background: var(--gpaz); box-shadow: 0 0 8px var(--gpaz); }
   .brand-dots span:nth-child(3) { background: var(--gco); box-shadow: 0 0 8px var(--gco); }
 
+  /* ====== Logo de las operadoras (AUSOL · GCO) ======
+     El PNG ya tiene fondo transparente (procesado con Python),
+     así que se integra limpiamente sobre el dark theme sin
+     mix-blend-mode ni card contenedora. */
+  .brand-logo {
+    height: 30px;
+    width: auto;
+    object-fit: contain;
+    transition: opacity .25s, filter .25s;
+    opacity: 0.92;
+  }
+  .brand:hover .brand-logo {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(52,152,219,0.35));
+  }
+  .footer-brand .brand-logo {
+    height: 38px;
+    opacity: 0.85;
+  }
+  .footer-brand:hover .brand-logo {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(52,152,219,0.30));
+  }
+  @media (max-width: 720px) {
+    .brand-logo { height: 24px; }
+    .footer-brand .brand-logo { height: 30px; }
+  }
+
   .nav-links {
     display: flex; gap: 4px;
     font-size: 13px;
@@ -153,7 +181,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-image: url('https://z-cdn.chatglm.cn/image-search-mcp/images-ppt/c90c953beb80.jpg');
+    background-image: url('https://www.clarin.com/img/2025/08/18/asw0i6d5m_2000x1500__1.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -1116,7 +1144,6 @@
     margin-bottom: 24px;
     display: flex;
     align-items: center;
-    gap: 12px;
     color: var(--text);
   }
   .footer-text {
@@ -1206,9 +1233,8 @@
 <!-- NAV -->
 <nav id="nav">
   <div class="container">
-    <a href="#top" class="brand">
-      <span class="brand-dots"><span></span><span></span><span></span></span>
-      Metropolitan Mobility Infrastructure
+    <a href="#top" class="brand" aria-label="Autopistas del Sol · Autopistas del Oeste">
+      <img src="brands.png" alt="Autopistas del Sol · Autopistas del Oeste" class="brand-logo" />
     </a>
     <div class="nav-links">
       <a href="#network">Network</a>
@@ -1684,8 +1710,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-brand">
-          <span class="brand-dots"><span></span><span></span><span></span></span>
-          Infrastructure Portfolio
+          <img src="brands.png" alt="Autopistas del Sol · Autopistas del Oeste" class="brand-logo" />
         </div>
         <div class="footer-text">
           <p>This site is intended for informational purposes only.</p>
