@@ -401,7 +401,13 @@
   }
 
   .map-wrap iframe {
-    width: 100%; height: 100%;
+    /* position:absolute + inset:0 fuerza al iframe a llenar el padre
+       incluso en iOS Safari, donde height:100% sin height explícito en
+       el padre colapsa a la mitad. */
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     border: 0;
     /* Por defecto NO se renderiza — previene scroll hijacking en iOS Safari */
     display: none;
@@ -1138,11 +1144,11 @@
     .hero { padding: 110px 0 80px; min-height: auto; }
     .kpi-row { grid-template-columns: 1fr; }
     .cards-3, .nodes-grid { grid-template-columns: 1fr; }
-    .bar-row { grid-template-columns: 90px 1fr; gap: 16px; }
-    .bar-value { display: none; }
+    .bar-row { grid-template-columns: 84px 1fr 72px; gap: 12px; }
+    .bar-value { font-size: 12px; }
     .footer-grid { grid-template-columns: 1fr; gap: 32px; }
     .footer-meta { flex-direction: column; }
-    .map-wrap { min-height: 320px; aspect-ratio: auto; }
+    .map-wrap { min-height: 420px; aspect-ratio: auto; }
     .map-legend { top: 12px; left: 12px; padding: 10px 12px; }
     .legend-item { font-size: 11px; }
     .bars { padding: 28px 22px; }
@@ -1722,23 +1728,38 @@
 </div>
 
 <script>
-  // Reveal on scroll
+  // Reveal on scroll — threshold bajo + rootMargin generoso para que
+  // dispare bien incluso en mobile (viewport chico, secciones altas).
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
         e.target.classList.add('in');
         // animate bars
         e.target.querySelectorAll('.bar-fill').forEach(b => {
-          if (b.dataset.width) b.style.width = b.dataset.width;
+          if (b.dataset.width) {
+            // peque\u00f1o RAF para garantizar que el transition dispare
+            requestAnimationFrame(() => { b.style.width = b.dataset.width; });
+          }
         });
         // animate counters
         e.target.querySelectorAll('.kpi-value[data-count]').forEach(animateCounter);
         io.unobserve(e.target);
       }
     });
-  }, { threshold: 0.15 });
+  }, { threshold: 0.05, rootMargin: '0px 0px -8% 0px' });
 
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Fallback: si IntersectionObserver no dispara (algunos mobile browsers viejos
+  // o casos l\u00edmite), forzar animaci\u00f3n de bars despu\u00e9s de 1.5s
+  setTimeout(() => {
+    document.querySelectorAll('.bars:not(.in)').forEach(el => {
+      el.classList.add('in');
+      el.querySelectorAll('.bar-fill').forEach(b => {
+        if (b.dataset.width && !b.style.width) b.style.width = b.dataset.width;
+      });
+    });
+  }, 1500);
 
   // Animated counters for KPI values
   function animateCounter(el) {
