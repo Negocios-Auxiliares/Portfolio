@@ -137,6 +137,7 @@
   .hero {
     position: relative;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     padding: 140px 0 100px;
@@ -378,24 +379,45 @@
     min-height: 480px;
     box-shadow: 0 40px 80px -30px rgba(0,0,0,0.6);
   }
+  /* Map preview (estático, no captura scroll en iOS Safari) */
+  .map-preview {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--bg-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .map-preview svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* Cuando el mapa está activo, ocultamos el preview */
+  .map-wrap.is-active .map-preview {
+    display: none;
+  }
+
   .map-wrap iframe {
     width: 100%; height: 100%;
     border: 0;
-    display: block;
+    /* Por defecto NO se renderiza — previene scroll hijacking en iOS Safari */
+    display: none;
     filter: invert(0.92) hue-rotate(180deg) saturate(0.6) brightness(0.95) contrast(0.95);
-    /* Por defecto el iframe no captura el scroll */
-    pointer-events: none;
-    transition: filter .3s;
-  }
-  .map-wrap.is-active iframe {
     pointer-events: auto;
   }
+  /* Sólo cuando está activo se carga y muestra */
+  .map-wrap.is-active iframe {
+    display: block;
+  }
 
-  /* Overlay de activación */
+  /* Overlay de activación — touch target grande para iOS */
   .map-overlay {
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 4;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -403,6 +425,8 @@
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     transition: opacity .3s, visibility .3s;
   }
   .map-wrap.is-active .map-overlay {
@@ -414,17 +438,19 @@
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 22px;
+    min-height: 48px;
+    padding: 16px 24px;
     font-family: var(--display);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.04em;
     color: var(--text);
-    background: rgba(11, 15, 25, 0.88);
-    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(11, 15, 25, 0.92);
+    border: 1px solid rgba(255,255,255,0.22);
     border-radius: 100px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    transition: transform .3s, background .3s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .3s, background .3s, border-color .3s;
   }
   .map-overlay:hover .map-overlay-inner {
     transform: translateY(-1px);
@@ -436,26 +462,28 @@
     color: var(--gco);
   }
 
-  /* Botón "liberar scroll" */
+  /* Botón "liberar scroll" — touch target ≥44px para iOS */
   .map-release {
     position: absolute;
     top: 18px; right: 18px;
-    z-index: 4;
+    z-index: 5;
     display: none;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: 10px;
+    min-height: 44px;
+    padding: 12px 18px;
     font-family: var(--display);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.06em;
     color: var(--text);
-    background: rgba(11, 15, 25, 0.88);
-    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(11, 15, 25, 0.92);
+    border: 1px solid rgba(255,255,255,0.22);
     border-radius: 100px;
     cursor: pointer;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    -webkit-tap-highlight-color: transparent;
     transition: background .2s, border-color .2s, transform .2s;
   }
   .map-wrap.is-active .map-release {
@@ -466,8 +494,12 @@
     border-color: rgba(255,255,255,0.35);
     transform: translateY(-1px);
   }
+  .map-release:active {
+    transform: scale(0.97);
+  }
   .map-release svg {
-    width: 12px; height: 12px;
+    width: 14px; height: 14px;
+    flex-shrink: 0;
   }
 
   /* Map legend overlay */
@@ -1256,8 +1288,118 @@
     </div>
 
     <div class="map-wrap reveal" id="network-map">
+      <!-- Static preview (no iframe loaded — no iOS Safari scroll hijack) -->
+      <div class="map-preview" aria-hidden="true">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="mp-g1" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"  stop-color="#F28C28" stop-opacity="0"/>
+              <stop offset="20%" stop-color="#F28C28" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#F28C28" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="mp-g2" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"  stop-color="#6BBB5E" stop-opacity="0"/>
+              <stop offset="20%" stop-color="#6BBB5E" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#6BBB5E" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="mp-g3" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"  stop-color="#3498DB" stop-opacity="0"/>
+              <stop offset="20%" stop-color="#3498DB" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#3498DB" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="mp-glow">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <radialGradient id="mp-vignette" cx="50%" cy="50%" r="65%">
+              <stop offset="0%"  stop-color="#0F1524" stop-opacity="0"/>
+              <stop offset="100%" stop-color="#0B0F19" stop-opacity="0.85"/>
+            </radialGradient>
+          </defs>
+
+          <!-- Background -->
+          <rect width="1600" height="900" fill="#0F1524"/>
+
+          <!-- Street grid -->
+          <g stroke="#1A2236" stroke-width="1" opacity="0.7">
+            <line x1="0" y1="120" x2="1600" y2="120"/>
+            <line x1="0" y1="240" x2="1600" y2="240"/>
+            <line x1="0" y1="360" x2="1600" y2="360"/>
+            <line x1="0" y1="480" x2="1600" y2="480"/>
+            <line x1="0" y1="600" x2="1600" y2="600"/>
+            <line x1="0" y1="720" x2="1600" y2="720"/>
+            <line x1="0" y1="840" x2="1600" y2="840"/>
+            <line x1="160" y1="0" x2="160" y2="900"/>
+            <line x1="320" y1="0" x2="320" y2="900"/>
+            <line x1="480" y1="0" x2="480" y2="900"/>
+            <line x1="640" y1="0" x2="640" y2="900"/>
+            <line x1="800" y1="0" x2="800" y2="900"/>
+            <line x1="960" y1="0" x2="960" y2="900"/>
+            <line x1="1120" y1="0" x2="1120" y2="900"/>
+            <line x1="1280" y1="0" x2="1280" y2="900"/>
+            <line x1="1440" y1="0" x2="1440" y2="900"/>
+          </g>
+
+          <!-- Río de la Plata (right edge) -->
+          <path d="M 1400 0 L 1600 0 L 1600 900 L 1380 900 C 1360 700, 1420 500, 1380 300 C 1360 150, 1400 80, 1400 0 Z"
+                fill="#0E1E2E" opacity="0.9"/>
+          <path d="M 1400 0 C 1400 80, 1360 150, 1380 300 C 1420 500, 1360 700, 1380 900"
+                stroke="#1A3850" stroke-width="2" fill="none" opacity="0.7"/>
+
+          <!-- AUSOL corridor (north) -->
+          <path d="M 60 280 C 300 320, 500 360, 720 420 S 1100 520, 1380 540"
+                stroke="url(#mp-g1)" stroke-width="3" fill="none" filter="url(#mp-glow)"/>
+          <path d="M 60 280 C 300 320, 500 360, 720 420 S 1100 520, 1380 540"
+                stroke="#F28C28" stroke-width="1.5" fill="none" opacity="0.85" stroke-dasharray="6 8">
+            <animate attributeName="stroke-dashoffset" from="0" to="-280" dur="18s" repeatCount="indefinite"/>
+          </path>
+
+          <!-- General Paz corridor (loop) -->
+          <path d="M 1240 380 C 1180 320, 1080 320, 1020 380 C 980 440, 980 500, 1020 540 C 1080 600, 1180 600, 1240 540 C 1280 500, 1280 440, 1240 380 Z"
+                stroke="url(#mp-g2)" stroke-width="3" fill="none" filter="url(#mp-glow)"/>
+
+          <!-- GCO corridor (west) -->
+          <path d="M 60 620 C 300 600, 500 580, 720 560 S 1000 500, 1240 480"
+                stroke="url(#mp-g3)" stroke-width="3" fill="none" filter="url(#mp-glow)"/>
+          <path d="M 60 620 C 300 600, 500 580, 720 560 S 1000 500, 1240 480"
+                stroke="#3498DB" stroke-width="1.5" fill="none" opacity="0.85" stroke-dasharray="6 8">
+            <animate attributeName="stroke-dashoffset" from="0" to="-280" dur="18s" repeatCount="indefinite"/>
+          </path>
+
+          <!-- Strategic nodes -->
+          <g filter="url(#mp-glow)">
+            <circle cx="180" cy="290" r="5" fill="#F28C28"/>
+            <circle cx="380" cy="330" r="5" fill="#F28C28"/>
+            <circle cx="1130" cy="430" r="6" fill="#3498DB"/>
+            <circle cx="1240" cy="380" r="5" fill="#6BBB5E"/>
+            <circle cx="380" cy="610" r="6" fill="#3498DB"/>
+          </g>
+          <g font-family="Inter, system-ui, sans-serif" font-size="14" fill="#7A8290" letter-spacing="2">
+            <text x="200" y="280">CAMPANA</text>
+            <text x="400" y="320">PILAR</text>
+            <text x="1150" y="420">ITUZAINGÓ</text>
+            <text x="1260" y="370">TIGRE</text>
+            <text x="400" y="600">LUJÁN</text>
+          </g>
+
+          <!-- Central label -->
+          <g font-family="'Space Grotesk', Inter, system-ui, sans-serif" text-anchor="middle">
+            <text x="800" y="430" font-size="22" font-weight="600" fill="#F5F7FA" letter-spacing="6">AMBA</text>
+            <text x="800" y="465" font-size="11" font-weight="500" fill="#6E7886" letter-spacing="3">METROPOLITAN NETWORK</text>
+          </g>
+
+          <!-- Vignette -->
+          <rect width="1600" height="900" fill="url(#mp-vignette)"/>
+        </svg>
+      </div>
+
+      <!-- Iframe — empty src by default, loaded only on activation -->
       <iframe
-        src="https://www.google.com/maps/d/embed?mid=1yISwUurIfM0oXgLIlyINMmL1xYauzXg&usp=sharing"
+        src=""
+        data-src="https://www.google.com/maps/d/embed?mid=1yISwUurIfM0oXgLIlyINMmL1xYauzXg&usp=sharing"
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade"
         title="Metropolitan corridor network map">
@@ -1629,16 +1771,33 @@
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // === Map activation toggle: avoid iframe hijacking page scroll ===
+  // === Map activation toggle (iOS Safari-safe: iframe is loaded ONLY when active) ===
   (function () {
     const mapWrap = document.getElementById('network-map');
     if (!mapWrap) return;
 
-    const overlay = mapWrap.querySelector('.map-overlay');
-    const release = mapWrap.querySelector('.map-release');
+    const overlay   = mapWrap.querySelector('.map-overlay');
+    const release   = mapWrap.querySelector('.map-release');
+    const iframe    = mapWrap.querySelector('iframe');
+    const mapSrc    = iframe ? iframe.getAttribute('data-src') : '';
 
-    function activate() { mapWrap.classList.add('is-active'); }
-    function deactivate() { mapWrap.classList.remove('is-active'); }
+    function activate() {
+      if (!iframe || !mapSrc) return;
+      // Load the iframe only when the user explicitly asks to interact.
+      // While the src is empty, iOS Safari cannot hijack the page scroll.
+      if (iframe.getAttribute('src') !== mapSrc) {
+        iframe.setAttribute('src', mapSrc);
+      }
+      mapWrap.classList.add('is-active');
+    }
+
+    function deactivate() {
+      // Unload the iframe entirely — this is the key fix for iOS Safari:
+      // removing the src destroys the iframe's content so it cannot capture
+      // touch/scroll events anymore.
+      if (iframe) iframe.setAttribute('src', '');
+      mapWrap.classList.remove('is-active');
+    }
 
     overlay.addEventListener('click', activate);
     overlay.addEventListener('keydown', (e) => {
